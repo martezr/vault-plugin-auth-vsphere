@@ -7,6 +7,14 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
+// backend implements logical.Backend
+type backend struct {
+	*framework.Backend
+
+	VmsMap *framework.PolicyMap
+}
+
+// Factory returns a new backend as logical.Backend.
 func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
 	b := Backend()
 	if err := b.Setup(ctx, conf); err != nil {
@@ -48,12 +56,6 @@ func Backend() *backend {
 	}
 
 	return &b
-}
-
-type backend struct {
-	*framework.Backend
-
-	VmsMap *framework.PolicyMap
 }
 
 const backendHelp = `

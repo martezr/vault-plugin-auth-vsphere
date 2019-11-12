@@ -8,13 +8,15 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
+// pathConfig returns the path configuration for CRUD operations on the backend
+// configuration.
 func pathConfig(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "config",
 		Fields: map[string]*framework.FieldSchema{
-			"vauth_server": {
+			"vauth_url": {
 				Type:        framework.TypeString,
-				Description: "vAuth Server",
+				Description: "vAuth URL address (http://vauth.grt.local:8090)",
 			},
 		},
 
@@ -31,6 +33,12 @@ func pathConfig(b *backend) *framework.Path {
 	}
 }
 
+// config contains the URL of the vAuth server used for VM validation
+type config struct {
+	VAuthURL string `json:"vauth_url"`
+}
+
+// pathConfigExistCheck checks for the existance of a configuration
 func (b *backend) pathConfigExistCheck(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
 	config, err := b.Config(ctx, req.Storage)
 	if err != nil {
@@ -44,6 +52,7 @@ func (b *backend) pathConfigExistCheck(ctx context.Context, req *logical.Request
 	return true, nil
 }
 
+// pathConfigCreateOrUpdate handles create and update commands to the config
 func (b *backend) pathConfigCreateOrUpdate(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	cfg, err := b.Config(ctx, req.Storage)
 	if err != nil {
@@ -54,14 +63,14 @@ func (b *backend) pathConfigCreateOrUpdate(ctx context.Context, req *logical.Req
 		cfg = &config{}
 	}
 
-	val, ok := data.GetOk("vauth_server")
+	val, ok := data.GetOk("vauth_url")
 	if ok {
-		cfg.vAuthServer = val.(string)
+		cfg.VAuthURL = val.(string)
 	} else if req.Operation == logical.CreateOperation {
-		cfg.vAuthServer = data.Get("vauth_server").(string)
+		cfg.VAuthURL = data.Get("vauth_url").(string)
 	}
-	if cfg.vAuthServer == "" {
-		return logical.ErrorResponse("config parameter `vauth_server` cannot be empty"), nil
+	if cfg.VAuthURL == "" {
+		return logical.ErrorResponse("config parameter `vauth_url` cannot be empty"), nil
 	}
 
 	entry, err := logical.StorageEntryJSON("config", cfg)
@@ -77,6 +86,7 @@ func (b *backend) pathConfigCreateOrUpdate(ctx context.Context, req *logical.Req
 	return nil, nil
 }
 
+// pathConfigWrite handles create and update commands to the config
 func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	config, err := b.Config(ctx, req.Storage)
 	if err != nil {
@@ -89,7 +99,7 @@ func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, data
 
 	resp := &logical.Response{
 		Data: map[string]interface{}{
-			"vauth_server": config.vAuthServer,
+			"vauth_url": config.VAuthURL,
 		},
 	}
 	return resp, nil
@@ -112,10 +122,6 @@ func (b *backend) Config(ctx context.Context, s logical.Storage) (*config, error
 	}
 
 	return nil, nil
-}
-
-type config struct {
-	vAuthServer string `json:"vauth_server"`
 }
 
 const pathConfigSyn = `

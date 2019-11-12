@@ -20,6 +20,7 @@ type vm struct {
 	Folder     string `json:"folder"`
 }
 
+// pathLogin returns the path configurations for login endpoints
 func pathLogin(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "login",
@@ -82,6 +83,7 @@ func (b *backend) pathLoginAliasLookahead(ctx context.Context, req *logical.Requ
 	}, nil
 }
 
+// pathLogin is used to authenticate to this backend
 func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	// Load and validate auth method configuration
 	config, err := b.Config(ctx, req.Storage)
@@ -115,10 +117,10 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 		return nil, fmt.Errorf("missing secretkey")
 	}
 
-	vAuthServer := config.vAuthServer
-	vAuthServer = "localhost"
+	VAuthURL := config.VAuthURL
+	VAuthURL = "localhost"
 
-	url := "http://" + vAuthServer + ":8090/vm/" + vmname
+	url := VAuthURL + "/vm/" + vmname
 	b.Logger().Info(url)
 	res, err := http.Get(url)
 	if err != nil {
@@ -128,8 +130,6 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 	var vmoutput vm
 
 	json.NewDecoder(res.Body).Decode(&vmoutput)
-
-	b.Logger().Info("Testing Stuff")
 
 	if vmname != vmoutput.Name {
 		return logical.ErrorResponse("Invalid VM name"), nil
@@ -176,7 +176,6 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 const pathLoginSyn = `
 Log in thVM name, vSphere datacenter, vSphere VM folder and a generated secret key.
 `
-
 const pathLoginDesc = `
 This endpoint authenticates using the VM name, vSphere datacenter, vSphere VM folder and a generated secret key.
 `
