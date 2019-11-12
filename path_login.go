@@ -24,19 +24,19 @@ func pathLogin(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "login",
 		Fields: map[string]*framework.FieldSchema{
-			"vmname": &framework.FieldSchema{
+			"vmname": {
 				Type:        framework.TypeString,
 				Description: "The name of the computer account.",
 			},
-			"datacenter": &framework.FieldSchema{
+			"datacenter": {
 				Type:        framework.TypeString,
 				Description: "The name of the vSphere datacenter.",
 			},
-			"secretkey": &framework.FieldSchema{
+			"secretkey": {
 				Type:        framework.TypeString,
 				Description: "The secret key associated with the virtual machine.",
 			},
-			"folder": &framework.FieldSchema{
+			"folder": {
 				Type:        framework.TypeString,
 				Description: "The folder associated with the virtual machine.",
 			},
@@ -68,7 +68,7 @@ func (b *backend) pathLoginAliasLookahead(ctx context.Context, req *logical.Requ
 		return nil, fmt.Errorf("missing secretkey")
 	}
 
-  folder := strings.ToLower(d.Get("folder").(string))
+	folder := strings.ToLower(d.Get("folder").(string))
 	if folder == "" {
 		return nil, fmt.Errorf("missing folder")
 	}

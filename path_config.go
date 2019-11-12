@@ -12,7 +12,7 @@ func pathConfig(b *backend) *framework.Path {
 	return &framework.Path{
 		Pattern: "config",
 		Fields: map[string]*framework.FieldSchema{
-			"vauth_server": &framework.FieldSchema{
+			"vauth_server": {
 				Type:        framework.TypeString,
 				Description: "vAuth Server",
 			},
@@ -26,8 +26,8 @@ func pathConfig(b *backend) *framework.Path {
 			logical.ReadOperation:   b.pathConfigRead,
 		},
 
-		HelpSynopsis: pathConfigSyn,
-    HelpDescription: pathConfigDesc,
+		HelpSynopsis:    pathConfigSyn,
+		HelpDescription: pathConfigDesc,
 	}
 }
 
