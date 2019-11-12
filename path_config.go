@@ -38,7 +38,7 @@ type config struct {
 	VAuthURL string `json:"vauth_url"`
 }
 
-// pathConfigExistCheck checks for the existance of a configuration
+// pathConfigExistCheck checks for the existence of a configuration
 func (b *backend) pathConfigExistCheck(ctx context.Context, req *logical.Request, data *framework.FieldData) (bool, error) {
 	config, err := b.Config(ctx, req.Storage)
 	if err != nil {

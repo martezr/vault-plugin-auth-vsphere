@@ -129,6 +129,7 @@ func (b *backend) pathVMList(ctx context.Context, req *logical.Request, d *frame
 	return logical.ListResponse(vms), nil
 }
 
+// VMEntry stores all the options that are set on a VM
 type VMEntry struct {
 	Name     string
 	Policies []string

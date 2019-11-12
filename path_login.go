@@ -118,8 +118,6 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 	}
 
 	VAuthURL := config.VAuthURL
-	VAuthURL = "localhost"
-
 	url := VAuthURL + "/vm/" + vmname
 	b.Logger().Info(url)
 	res, err := http.Get(url)
