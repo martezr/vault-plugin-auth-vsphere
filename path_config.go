@@ -19,17 +19,14 @@ func pathConfig(b *backend) *framework.Path {
 				Description: "vAuth URL address (https://vauth.grt.local)",
 			},
 		},
-
 		ExistenceCheck: b.pathConfigExistCheck,
-
 		Callbacks: map[logical.Operation]framework.OperationFunc{
 			logical.UpdateOperation: b.pathConfigCreateOrUpdate,
 			logical.CreateOperation: b.pathConfigCreateOrUpdate,
 			logical.ReadOperation:   b.pathConfigRead,
 		},
 
-		HelpSynopsis:    pathConfigSyn,
-		HelpDescription: pathConfigDesc,
+		HelpSynopsis: pathConfigSyn,
 	}
 }
 
@@ -125,9 +122,5 @@ func (b *backend) Config(ctx context.Context, s logical.Storage) (*config, error
 }
 
 const pathConfigSyn = `
-VMware vSphere auth configuration
-`
-
-const pathConfigDesc = `
-Use this endpoint to set vAuth endpoint settings.
-`
+This path allows you to configure the VMware vSphere auth provider to interact with the vAuth Identity Platform
+for authenticating virtual machines.`

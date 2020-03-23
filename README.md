@@ -24,24 +24,26 @@ To learn specifically about how plugins work, see documentation on [Vault plugin
 Download the latest plugin binary from the [Releases](https://github.com/martezr/vault-plugin-auth-vsphere/releases) page on GitHub and move the plugin binary into Vault's configured *plugin_directory*.
 
 ```
-$ mv vault-plugin-auth-vsphere /etc/vault/plugins/vault-plugin-auth-vspherre
+$ mv vault-plugin-auth-vsphere /etc/vault/plugins/vault-plugin-auth-vsphere
 ```
 
 Calculate the checksum of the plugin and register it in Vault's plugin catalog. It is highly recommended that you use the published checksums on the Release page to verify integrity.
 
 ```
-$ export SHA256_SUM=$(shasum -a 256 "/etc/vault/plugins/vault-plugin-auth-vsphere" | cut -d' ' -f1)
-$ vault write sys/plugins/catalog/auth/vsphere \
-    command="vault-plugin-auth-vsphere" \
-    sha_256="${SHA256_SUM}"
+$ export SHA256_SUM=$(shasum -a 256 "/opt/vault/plugins/vault-plugin-auth-vsphere" | cut -d' ' -f1)
+$ vault write sys/plugins/catalog/auth/vsphere command="vault-plugin-auth-vsphere" sha_256="${SHA256_SUM}"
 ```
 
 Enable authentication with the plugin.
 
 ```
-$ vault auth enable -path="vsphere" -plugin-name="vsphere" plugin
+$ vault auth enable vsphere
 ```
 
+Configure the vAuth URL
+```
+$ vault write auth/vsphere/config vauth_url="https://vauth.grt.local"
+```
 
 ## Developing
 
@@ -70,7 +72,6 @@ Enable the vSphere authentication plugin
 ```
 vault auth enable -path="vsphere" -plugin-name="vsphere" plugin
 ```
-
 
 ## License
 

@@ -23,6 +23,7 @@ func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend,
 	return b, nil
 }
 
+// Backend provides the backend for the plugin
 func Backend() *backend {
 	var b backend
 
@@ -34,8 +35,8 @@ func Backend() *backend {
 	}
 
 	b.Backend = &framework.Backend{
-		Help: backendHelp,
-
+		BackendType: logical.TypeCredential,
+		Help:        backendHelp,
 		PathsSpecial: &logical.Paths{
 			Unauthenticated: []string{
 				"login",
@@ -44,15 +45,12 @@ func Backend() *backend {
 				"config",
 			},
 		},
-
 		Paths: []*framework.Path{
 			pathConfig(&b),
 			pathLogin(&b),
 			pathListRoles(&b),
 			pathRoles(&b),
 		},
-
-		BackendType: logical.TypeCredential,
 	}
 
 	return &b

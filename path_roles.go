@@ -142,7 +142,7 @@ Manage users allowed to authenticate.
 const pathUserHelpDesc = `
 This endpoint allows you to create, read, update, and delete users
 that are allowed to authenticate.
-Deleting a user will not revoke auth for prior authenticated users
+Deleting a role will not revoke auth for prior authenticated virtual machines
 with that name. To do this, do a revoke on "login/<username>" for
 the username you want revoked. If you don't need to revoke login immediately,
 then the next renew will cause the lease to expire.

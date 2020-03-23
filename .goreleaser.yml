@@ -1,0 +1,34 @@
+# Configuration for https://goreleaser.com/
+project_name: vault-plugin-auth-vsphere
+
+builds:
+  - id: vault-plugin-auth-vsphere
+    binary: vault-plugin-auth-vsphere
+    main: main.go
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
+      - 386
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: vault-plugin-auth-vsphere
+    builds: [ vault-plugin-auth-vsphere ]
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    files:
+      - none*
