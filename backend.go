@@ -11,7 +11,7 @@ import (
 type backend struct {
 	*framework.Backend
 
-	VmsMap *framework.PolicyMap
+	RolesMap *framework.PolicyMap
 }
 
 // Factory returns a new backend as logical.Backend.
@@ -26,9 +26,9 @@ func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend,
 func Backend() *backend {
 	var b backend
 
-	b.VmsMap = &framework.PolicyMap{
+	b.RolesMap = &framework.PolicyMap{
 		PathMap: framework.PathMap{
-			Name: "vms",
+			Name: "roles",
 		},
 		DefaultKey: "default",
 	}
@@ -48,8 +48,8 @@ func Backend() *backend {
 		Paths: []*framework.Path{
 			pathConfig(&b),
 			pathLogin(&b),
-			pathListVms(&b),
-			pathVms(&b),
+			pathListRoles(&b),
+			pathRoles(&b),
 		},
 
 		BackendType: logical.TypeCredential,

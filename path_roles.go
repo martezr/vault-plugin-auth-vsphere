@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
-func pathListVms(b *backend) *framework.Path {
+func pathListRoles(b *backend) *framework.Path {
 	return &framework.Path{
-		Pattern: "vms/?",
+		Pattern: "roles/?",
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ListOperation: b.pathVMList,
+			logical.ListOperation: b.pathRoleList,
 		},
 
 		HelpSynopsis:    pathUserHelpSyn,
@@ -23,13 +23,13 @@ func pathListVms(b *backend) *framework.Path {
 	}
 }
 
-func pathVms(b *backend) *framework.Path {
+func pathRoles(b *backend) *framework.Path {
 	return &framework.Path{
-		Pattern: "vms/" + framework.GenericNameRegex("name"),
+		Pattern: "role/" + framework.GenericNameRegex("role"),
 		Fields: map[string]*framework.FieldSchema{
-			"name": {
+			"role": {
 				Type:        framework.TypeString,
-				Description: "Name of the virtual machine.",
+				Description: "Role associated with the virtual machine.",
 			},
 
 			"policies": {
@@ -39,10 +39,10 @@ func pathVms(b *backend) *framework.Path {
 		},
 
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.DeleteOperation: b.pathVMDelete,
-			logical.ReadOperation:   b.pathVMRead,
-			logical.UpdateOperation: b.pathVMWrite,
-			logical.CreateOperation: b.pathVMWrite,
+			logical.DeleteOperation: b.pathRoleDelete,
+			logical.ReadOperation:   b.pathRoleRead,
+			logical.UpdateOperation: b.pathRoleWrite,
+			logical.CreateOperation: b.pathRoleWrite,
 		},
 
 		HelpSynopsis:    pathUserHelpSyn,
@@ -50,8 +50,8 @@ func pathVms(b *backend) *framework.Path {
 	}
 }
 
-func (b *backend) pathVMDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	err := req.Storage.Delete(ctx, "vm/"+d.Get("name").(string))
+func (b *backend) pathRoleDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	err := req.Storage.Delete(ctx, "role/"+d.Get("role").(string))
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (b *backend) pathVMDelete(ctx context.Context, req *logical.Request, d *fra
 	return nil, nil
 }
 
-func (b *backend) vm(ctx context.Context, s logical.Storage, vmname string) (*VMEntry, error) {
-	if vmname == "" {
-		return nil, fmt.Errorf("missing vmname")
+func (b *backend) role(ctx context.Context, s logical.Storage, role string) (*RoleEntry, error) {
+	if role == "" {
+		return nil, fmt.Errorf("missing role")
 	}
 
-	entry, err := s.Get(ctx, "vm/"+strings.ToLower(vmname))
+	entry, err := s.Get(ctx, "role/"+strings.ToLower(role))
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (b *backend) vm(ctx context.Context, s logical.Storage, vmname string) (*VM
 		return nil, nil
 	}
 
-	var result VMEntry
+	var result RoleEntry
 	if err := entry.DecodeJSON(&result); err != nil {
 		return nil, err
 	}
@@ -80,24 +80,24 @@ func (b *backend) vm(ctx context.Context, s logical.Storage, vmname string) (*VM
 	return &result, nil
 }
 
-func (b *backend) pathVMRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	vm, err := b.vm(ctx, req.Storage, d.Get("name").(string))
+func (b *backend) pathRoleRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	role, err := b.role(ctx, req.Storage, d.Get("role").(string))
 	if err != nil {
 		return nil, err
 	}
-	if vm == nil {
+	if role == nil {
 		return nil, nil
 	}
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"policies": vm.Policies,
+			"policies": role.Policies,
 		},
 	}, nil
 }
 
-func (b *backend) pathVMWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	name := strings.ToLower(d.Get("name").(string))
+func (b *backend) pathRoleWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	role := strings.ToLower(d.Get("role").(string))
 
 	var policies = policyutil.ParsePolicies(d.Get("policies"))
 	for _, policy := range policies {
@@ -107,8 +107,8 @@ func (b *backend) pathVMWrite(ctx context.Context, req *logical.Request, d *fram
 	}
 
 	// Store it
-	entry, err := logical.StorageEntryJSON("vm/"+d.Get("name").(string), &VMEntry{
-		Name:     name,
+	entry, err := logical.StorageEntryJSON("role/"+d.Get("role").(string), &RoleEntry{
+		Role:     role,
 		Policies: policies,
 	})
 	if err != nil {
@@ -121,17 +121,17 @@ func (b *backend) pathVMWrite(ctx context.Context, req *logical.Request, d *fram
 	return nil, nil
 }
 
-func (b *backend) pathVMList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	vms, err := req.Storage.List(ctx, "vm/")
+func (b *backend) pathRoleList(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	roles, err := req.Storage.List(ctx, "role/")
 	if err != nil {
 		return nil, err
 	}
-	return logical.ListResponse(vms), nil
+	return logical.ListResponse(roles), nil
 }
 
-// VMEntry stores all the options that are set on a VM
-type VMEntry struct {
-	Name     string
+// RoleEntry stores all the options that are set on a VM
+type RoleEntry struct {
+	Role     string
 	Policies []string
 }
 

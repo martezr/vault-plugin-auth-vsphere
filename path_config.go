@@ -16,7 +16,7 @@ func pathConfig(b *backend) *framework.Path {
 		Fields: map[string]*framework.FieldSchema{
 			"vauth_url": {
 				Type:        framework.TypeString,
-				Description: "vAuth URL address (http://vauth.grt.local:8090)",
+				Description: "vAuth URL address (https://vauth.grt.local)",
 			},
 		},
 

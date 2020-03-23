@@ -3,9 +3,12 @@ package vsphere
 import (
 	"context"
 	"encoding/json"
+
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
@@ -17,7 +20,7 @@ type vm struct {
 	Name       string `json:"name"`
 	Datacenter string `json:"datacenter"`
 	SecretKey  string `json:"secretkey"`
-	Folder     string `json:"folder"`
+	Role       string `json:"role"`
 }
 
 // pathLogin returns the path configurations for login endpoints
@@ -27,7 +30,7 @@ func pathLogin(b *backend) *framework.Path {
 		Fields: map[string]*framework.FieldSchema{
 			"vmname": {
 				Type:        framework.TypeString,
-				Description: "The name of the computer account.",
+				Description: "The name of the virtual machine.",
 			},
 			"datacenter": {
 				Type:        framework.TypeString,
@@ -37,9 +40,9 @@ func pathLogin(b *backend) *framework.Path {
 				Type:        framework.TypeString,
 				Description: "The secret key associated with the virtual machine.",
 			},
-			"folder": {
+			"role": {
 				Type:        framework.TypeString,
-				Description: "The folder associated with the virtual machine.",
+				Description: "The role associated with the virtual machine.",
 			},
 		},
 
@@ -69,9 +72,9 @@ func (b *backend) pathLoginAliasLookahead(ctx context.Context, req *logical.Requ
 		return nil, fmt.Errorf("missing secretkey")
 	}
 
-	folder := strings.ToLower(d.Get("folder").(string))
-	if folder == "" {
-		return nil, fmt.Errorf("missing folder")
+	role := strings.ToLower(d.Get("role").(string))
+	if role == "" {
+		return nil, fmt.Errorf("missing role")
 	}
 
 	return &logical.Response{
@@ -101,10 +104,10 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 		return logical.ErrorResponse("missing vmname"), nil
 	}
 
-	folder := d.Get("folder").(string)
+	role := d.Get("role").(string)
 
-	if folder == "" {
-		return logical.ErrorResponse("missing folder"), nil
+	if role == "" {
+		return logical.ErrorResponse("missing role"), nil
 	}
 
 	datacenter := d.Get("datacenter").(string)
@@ -120,6 +123,13 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 	VAuthURL := config.VAuthURL
 	url := VAuthURL + "/vm/" + vmname
 	b.Logger().Info(url)
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	//	var netClient = &http.Client{
+	//		Timeout: time.Second * 10,
+	//	}
+
 	res, err := http.Get(url)
 	if err != nil {
 		panic(err.Error())
@@ -132,10 +142,9 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 	if vmname != vmoutput.Name {
 		return logical.ErrorResponse("Invalid VM name"), nil
 	}
-	b.Logger().Info(folder)
-	b.Logger().Info(vmoutput.Folder)
-	if folder != vmoutput.Folder {
-		return logical.ErrorResponse("Invalid Folder"), nil
+
+	if role != vmoutput.Role {
+		return logical.ErrorResponse("Invalid role"), nil
 	}
 
 	if datacenter != vmoutput.Datacenter {
@@ -146,34 +155,35 @@ func (b *backend) pathLogin(ctx context.Context, req *logical.Request, d *framew
 		return logical.ErrorResponse("Invalid secret key"), nil
 	}
 
-	//	vmdata, _ := b.vm(ctx, req.Storage, vmname)
+	vmdata, _ := b.role(ctx, req.Storage, role)
 
-	//	policies := vmdata.Policies
+	policies := vmdata.Policies
 
 	resp := &logical.Response{
 		Auth: &logical.Auth{
 			Metadata: map[string]string{
-				"vmname": vmname,
-				//				"policies": strings.Join(policies, ","),
+				"vmname":   vmname,
+				"policies": strings.Join(policies, ","),
 			},
 			DisplayName: vmname,
 			LeaseOptions: logical.LeaseOptions{
-				TTL:       30,
-				Renewable: false,
+				TTL:       30 * time.Minute,
+				MaxTTL:    60 * time.Minute,
+				Renewable: true,
 			},
 			Alias: &logical.Alias{
 				Name: vmname,
 			},
 		},
 	}
-	//	resp.Auth.Policies = append(resp.Auth.Policies, policies...)
+	resp.Auth.Policies = append(resp.Auth.Policies, policies...)
 
 	return resp, nil
 }
 
 const pathLoginSyn = `
-Log in thVM name, vSphere datacenter, vSphere VM folder and a generated secret key.
+Log in with the VM name, vSphere datacenter, vSphere VM role and generated secret key.
 `
 const pathLoginDesc = `
-This endpoint authenticates using the VM name, vSphere datacenter, vSphere VM folder and a generated secret key.
+This endpoint authenticates using the VM name, vSphere datacenter, vSphere VM role and a generated secret key.
 `
