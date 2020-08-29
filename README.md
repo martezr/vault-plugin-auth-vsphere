@@ -24,25 +24,34 @@ To learn specifically about how plugins work, see documentation on [Vault plugin
 Download the latest plugin binary from the [Releases](https://github.com/martezr/vault-plugin-auth-vsphere/releases) page on GitHub and move the plugin binary into Vault's configured *plugin_directory*.
 
 ```
-$ mv vault-plugin-auth-vsphere /etc/vault/plugins/vault-plugin-auth-vsphere
+mv vault-plugin-auth-vsphere /etc/vault/plugins/vault-plugin-auth-vsphere
 ```
 
 Calculate the checksum of the plugin and register it in Vault's plugin catalog. It is highly recommended that you use the published checksums on the Release page to verify integrity.
 
 ```
-$ export SHA256_SUM=$(shasum -a 256 "/opt/vault/plugins/vault-plugin-auth-vsphere" | cut -d' ' -f1)
-$ vault write sys/plugins/catalog/auth/vsphere command="vault-plugin-auth-vsphere" sha_256="${SHA256_SUM}"
+export SHA256_SUM=$(shasum -a 256 "/opt/vault/plugins/vault-plugin-auth-vsphere" | cut -d' ' -f1)
+```
+
+```
+vault write sys/plugins/catalog/auth/vsphere command="vault-plugin-auth-vsphere" sha_256="${SHA256_SUM}
 ```
 
 Enable authentication with the plugin.
 
 ```
-$ vault auth enable vsphere
+vault auth enable vsphere
 ```
 
 Configure the vAuth URL
 ```
-$ vault write auth/vsphere/config vauth_url="https://vauth.grt.local"
+vault write auth/vsphere/config vauth_url="https://vauth.grt.local"
+```
+
+Create a role and assign a policy to the role
+```
+vault write auth/vsphere/role/webapp policies=webapp
+
 ```
 
 ## Developing
@@ -54,7 +63,7 @@ If you wish to work on this plugin, you'll first need
 Compile the plugin binary for use with Vault
 
 ```shell
-go build -o plugins/vsphere cmd/vault-plugin-auth-vsphere/main.go
+env GOOS=linux GOARCH=amd64 go build -o plugins/vault-plugin-auth-vsphere cmd/vault-plugin-auth-vsphere/main.go
 ```
 
 Run HashiCorp Vault in dev mode with the plugin automatically loaded
@@ -70,7 +79,7 @@ export VAULT_ADDR="http://127.0.0.1:8200"
 Enable the vSphere authentication plugin
 
 ```
-vault auth enable -path="vsphere" -plugin-name="vsphere" plugin
+vault auth enable -path="vsphere" -plugin-name="vault-plugin-auth-vsphere" plugin
 ```
 
 ## License
