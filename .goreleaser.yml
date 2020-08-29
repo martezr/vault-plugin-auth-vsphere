@@ -4,7 +4,7 @@ project_name: vault-plugin-auth-vsphere
 builds:
   - id: vault-plugin-auth-vsphere
     binary: vault-plugin-auth-vsphere
-    main: main.go
+    main: cmd/vault-plugin-auth-vsphere/main.go
     goos:
       - freebsd
       - windows
